@@ -1,0 +1,10 @@
+/db/*
+/incremental_db/*
+/netlist/*
+/output_files/*
+!/output_files/VerilogCpu.sof
+/simulation/*
+VerilogCpu_description.txt
+VerilogCpu.code-workspace
+VerilogCpu.qpf
+VerilogCpu.qsf
