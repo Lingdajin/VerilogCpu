@@ -241,6 +241,16 @@ module controller(
                         alu_in_sel <= 3'b000;
                         alu_func <= 4'b1000;     //添加除法指令
                     end
+                    8'b00010000 : begin
+                        dest_reg <= temp3;
+                        sour_reg <= temp4;
+                        offset <= 8'b00000000;
+                        sci <= 2'b10;
+                        sst <= 2'b00;
+                        alu_out_sel = 2'b01;
+                        alu_in_sel <= 3'b000;
+                        alu_func <= 4'b1001;     //添加乘法指令
+                    end
                     8'b01000000 : begin
                         dest_reg <= 4'b0000;
                         sour_reg <= 4'b0000;

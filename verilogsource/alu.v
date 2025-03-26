@@ -11,7 +11,7 @@ module alu(
         output reg s
     );
 
-
+    reg [31:0] mul_temp;    //乘法结果暂存
 
 
     always @(*) begin : P1
@@ -61,6 +61,10 @@ module alu(
                 // end
                 temp2 = alu_b / alu_a;
             end
+            4'b1001 :  begin    //乘法赋值
+                mul_temp = alu_b * alu_a;
+                temp2 = mul_temp[15:0];
+            end
             default : begin
                 temp2 = 16'b0000000000000000;
             end
@@ -81,6 +85,14 @@ module alu(
         case(alu_func)
             4'b0000,4'b0001 : begin
                 if((alu_a[15] == 1'b1 && alu_b[15] == 1'b1 && temp2[15] == 1'b0) || (alu_a[15] == 1'b0 && alu_b[15] == 1'b0 && temp2[15] == 1'b1)) begin
+                    v <= 1'b1;
+                end
+                else begin
+                    v <= 1'b0;
+                end
+            end
+            4'b1001 : begin     //乘法溢出标志位,若高16位不全为0则溢出
+                if((mul_temp[31:16] && 16'b1111_1111_1111_1111) != 0) begin
                     v <= 1'b1;
                 end
                 else begin
