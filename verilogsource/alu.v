@@ -14,7 +14,6 @@ module alu(
 
 
 
-
     always @(*) begin : P1
         integer I1;
         integer I2;
@@ -56,8 +55,11 @@ module alu(
             4'b0111 : begin : P4     //dest_reg取反
                 temp2 = ~alu_b;
             end
-            4'b1000 : begin
-                
+            4'b1000 : begin     //除法赋值
+                // if(div_done) begin
+                //     temp2 = div_result;
+                // end
+                temp2 = alu_b / alu_a;
             end
             default : begin
                 temp2 = 16'b0000000000000000;

@@ -75,7 +75,8 @@ module cpu0(
             .c(fc),
             .z(fz),
             .v(fv),
-            .s(fs));
+            .s(fs)
+            );
 
     flag_reg f3(
                  .sst(sst),
