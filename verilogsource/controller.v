@@ -16,7 +16,9 @@ module controller(
         output reg [2:0] alu_in_sel,
         output reg en_reg,
         output reg en_pc,
-        output reg wr
+        output reg wr,
+        output reg push,
+        output reg pop
     );
 
 
@@ -52,6 +54,8 @@ module controller(
                 alu_func <= 4'b00000;
                 wr <= 1'b1;
                 rec <= 2'b00;
+                push <= 1'b0;
+                pop <= 1'b0;
             end
             3'b000 : begin
                 dest_reg <= 4'b0000;
@@ -64,6 +68,8 @@ module controller(
                 alu_func <= 4'b00000;
                 wr <= 1'b1;
                 rec <= 2'b01;
+                push <= 1'b0;
+                pop <= 1'b0;
             end
             3'b001 : begin
                 dest_reg <= 4'b0000;
@@ -76,10 +82,14 @@ module controller(
                 alu_func <= 4'b00000;
                 wr <= 1'b1;
                 rec <= 2'b10;
+                push <= 1'b0;
+                pop <= 1'b0;
             end
             3'b011 : begin
                 wr <= 1'b1;
                 rec <= 2'b00;
+                push <= 1'b0;
+                pop <= 1'b0;
                 case(temp1)
                     8'b00000000 : begin
                         dest_reg <= temp3;
@@ -358,18 +368,40 @@ module controller(
                         alu_out_sel = 2'b10;
                         alu_in_sel <= 3'b100;
                         rec <= 2'b01;
+                        push <= 1'b0;
+                        pop <= 1'b0;
                     end
                     8'b10000010 : begin
                         sci <= 2'b00;
                         alu_out_sel = 2'b00;
                         alu_in_sel <= 3'b001;
                         rec <= 2'b11;
+                        push <= 1'b0;
+                        pop <= 1'b0;
                     end
                     8'b10000011 : begin
                         sci <= 2'b00;
                         alu_out_sel = 2'b00;
                         alu_in_sel <= 3'b010;
                         rec <= 2'b11;
+                        push <= 1'b0;
+                        pop <= 1'b0;
+                    end
+                    8'b1000_0100 : begin    //PUSH命令
+                        sci <= 2'b00;
+                        alu_out_sel = 2'b00;
+                        alu_in_sel <= 3'b110;   //读取堆栈指针
+                        rec <= 2'b11;
+                        push <= 1'b1;   //sp已经在上一time减一，不再操作
+                        pop <= 1'b0;
+                    end
+                    8'b1000_0101 : begin    //POP命令
+                        sci <= 2'b00;
+                        alu_out_sel = 2'b00;
+                        alu_in_sel <= 3'b111;
+                        rec <= 2'b11;
+                        push <= 1'b0;
+                        pop <= 1'b0;  //先读取，再sp+1
                     end
                     default : begin
                     end
@@ -388,16 +420,36 @@ module controller(
                         alu_out_sel = 2'b01;
                         alu_in_sel <= 3'b101;
                         wr <= 1'b1;
+                        push <= 1'b0;
+                        pop <= 1'b0;
                     end
                     8'b10000000 : begin
                         alu_out_sel = 2'b10;
                         alu_in_sel <= 3'b101;
                         wr <= 1'b1;
+                        push <= 1'b0;
+                        pop <= 1'b0;
                     end
                     8'b10000011 : begin
                         alu_out_sel = 2'b00;
                         alu_in_sel <= 3'b001;
                         wr <= 1'b0;
+                        push <= 1'b0;
+                        pop <= 1'b0;
+                    end
+                    8'b1000_0100 : begin    //PUSH命令
+                        alu_out_sel = 2'b00;
+                        alu_in_sel <= 3'b001;   //读取堆栈指针
+                        wr <= 1'b0;
+                        push <= 1'b0;
+                        pop <= 1'b0;
+                    end
+                    8'b1000_0101 : begin    //POP命令
+                        alu_out_sel = 2'b01;
+                        alu_in_sel <= 3'b101;
+                        wr <= 1'b1;
+                        push <= 1'b0;
+                        pop <= 1'b1;   //sp已在上一time加一，不再进行操作
                     end
                     default : begin
                     end

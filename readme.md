@@ -13,3 +13,12 @@
 * CZVS ****
 * 指令类型 A组指令
 * 功能说明 DR <- DR/SR
+
+## 添加堆栈指针操作命令
+* 指令格式 PUSH 1000_0100   POP 1000_0101
+* 汇编语句 PUSH SR          POP DR
+* 操作数个数 1
+* CZVS ....
+* 指令类型 B组指令
+* 功能说明 PUSH [SP - 1] <- SR      SP <- SP - 1
+           POP  DR <- [SP]      SP <- SP + 1

@@ -38,6 +38,9 @@ module cpu0(
     wire [3:0] d_reg; wire [3:0] s_reg;
     wire [7:0] offset_8;
     wire [15:0] instruction; wire [15:0] alu_sr; wire [15:0] alu_dr; wire [15:0] alu_out; wire [15:0] reg_test; wire [15:0] offset_16; wire [15:0] ar_bus; wire [15:0] pc_bus; wire [15:0] reg_0; wire [15:0] reg_1; wire [15:0] reg_2; wire [15:0] reg_3; wire [15:0] reg_4; wire [15:0] reg_5; wire [15:0] reg_6; wire [15:0] reg_7; wire [15:0] reg_8; wire [15:0] reg_9; wire [15:0] reg_a; wire [15:0] reg_b; wire [15:0] reg_c; wire [15:0] reg_d; wire [15:0] reg_e; wire [15:0] reg_f; wire [15:0] reg_inout; wire [15:0] sr; wire [15:0] dr;
+    wire push;
+    wire pop;
+    wire [15:0] reg_sp;
 
     controller f1(
                    .timer(tim),
@@ -56,7 +59,10 @@ module cpu0(
                    .alu_in_sel(alu_in_sel),
                    .en_reg(en_reg),
                    .en_pc(en_pc),
-                   .wr(wre));
+                   .wr(wre),
+                   .push(push),
+                   .pop(pop)
+                   );
 
     always @(wre, flag_c, flag_z, flag_v, flag_s) begin
         wr <= wre;
@@ -319,8 +325,18 @@ module cpu0(
                 .offset(offset_16),
                 .sr(sr),
                 .dr(dr),
+                .sp(reg_sp),
+
                 .alu_sr(alu_sr),
                 .alu_dr(alu_dr));
 
+    reg_sp(
+                .push(push),
+                .pop(pop),
+                .clk(clk),
+                .reset(reset),
+
+                .q(reg_sp)
+    );
 
 endmodule

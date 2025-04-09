@@ -6,6 +6,8 @@ module bus_mux(
         input wire [15:0] offset,
         input wire [15:0] sr,
         input wire [15:0] dr,
+        input wire [15:0] sp,
+
         output reg [15:0] alu_sr,
         output reg [15:0] alu_dr
     );
@@ -39,6 +41,14 @@ module bus_mux(
             3'b101 : begin
                 alu_sr <= 16'b0000000000000000;
                 alu_dr <= data;
+            end
+            3'b110 : begin  //满递减堆栈
+                alu_sr <= 16'b0000000000000000;
+                alu_dr <= sp - 1'b1; // 栈顶指针预移动，由于push置一后，sp指针不会立即变化
+            end
+            3'b111 : begin  //满递减堆栈
+                alu_sr <= sp;
+                alu_dr <= 16'b0000000000000000;
             end
             default : begin
                 alu_sr <= 16'b0000000000000000;
