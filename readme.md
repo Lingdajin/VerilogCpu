@@ -38,3 +38,11 @@
 * CZVS ....
 * 指令类型 A组指令
 * 功能说明  ROL DR <- (DR << SR)    ROR DR <- (DR >> SR)
+
+## 添加循环左移右移命令（使用立即数作为移位次数）
+* 指令格式 ROL_ 1000_0110_DR_0000_data   ROR_ 0001_0010_DR_0000_data
+* 汇编语句 ROL_ DR data                     ROR_ DR data
+* 操作数个数 2
+* CZVS ....
+* 指令类型 B组指令
+* 功能说明  ROL_ DR <- (DR << data)    ROR_ DR <- (DR >> data)

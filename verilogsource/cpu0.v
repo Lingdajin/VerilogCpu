@@ -34,7 +34,7 @@ module cpu0(
 
     wire fc; wire fz; wire fv; wire fs; wire flag_c; wire flag_z; wire flag_v; wire flag_s; wire en_pc; wire en_reg; wire alu_cin; wire en_0; wire en_1; wire en_2; wire en_3; wire en_4; wire en_5; wire en_6; wire en_7; wire en_8; wire en_9; wire en_a; wire en_b; wire en_c; wire en_d; wire en_e; wire en_f; wire wre;
     wire [1:0] sst; wire [1:0] sci; wire [1:0] rec;
-    wire [2:0] tim; wire [3:0] alu_func; wire [2:0] alu_in_sel;
+    wire [2:0] tim; wire [3:0] alu_func; wire [3:0] alu_in_sel;
     wire [3:0] d_reg; wire [3:0] s_reg;
     wire [7:0] offset_8;
     wire [15:0] instruction; wire [15:0] alu_sr; wire [15:0] alu_dr; wire [15:0] alu_out; wire [15:0] reg_test; wire [15:0] offset_16; wire [15:0] ar_bus; wire [15:0] pc_bus; wire [15:0] reg_0; wire [15:0] reg_1; wire [15:0] reg_2; wire [15:0] reg_3; wire [15:0] reg_4; wire [15:0] reg_5; wire [15:0] reg_6; wire [15:0] reg_7; wire [15:0] reg_8; wire [15:0] reg_9; wire [15:0] reg_a; wire [15:0] reg_b; wire [15:0] reg_c; wire [15:0] reg_d; wire [15:0] reg_e; wire [15:0] reg_f; wire [15:0] reg_inout; wire [15:0] sr; wire [15:0] dr;
