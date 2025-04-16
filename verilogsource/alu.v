@@ -19,6 +19,7 @@ module alu(
         integer I2;
         
         reg [15:0] temp1, temp2, temp3;
+        reg [31:0] res32;   //32位结果暂存，可用于循环移位
 
         temp1 = {15'b000000000000000,cin};
         
@@ -64,6 +65,14 @@ module alu(
             4'b1001 :  begin    //乘法赋值
                 mul_temp = alu_b * alu_a;
                 temp2 = mul_temp[15:0];
+            end
+            4'b1010 : begin     //循环左移
+                res32 = {alu_b,alu_b} << alu_a[3:0];    //将源操作数作为移位次数（取低4位，即移位0~15次，再高就是循环），目的操作数作为被移位数
+                temp2 = res32[31:16];   //截取缓存的高16位作为结果
+            end
+            4'b1011 : begin     //循环右移
+                res32 = {alu_b,alu_b} >> alu_a[3:0];    //将源操作数作为移位次数（取低4位，即移位0~15次，再高就是循环），目的操作数作为被移位数
+                temp2 = res32[15:0];   //截取缓存的低16位作为结果
             end
             default : begin
                 temp2 = 16'b0000000000000000;
