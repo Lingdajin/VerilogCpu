@@ -292,6 +292,17 @@ module controller(
                         alu_in_sel <= 4'b0000;
                         alu_func <= 4'b1100;    //alu_func实现算数右移
                     end
+                    8'b0001_0100 : begin    //按位反转
+                        dest_reg <= temp3;
+                        sour_reg <= temp4;
+                        offset <= 8'b00000000;
+                        sci <= 2'b00;
+                        sst <= 2'b00;
+                        alu_out_sel = 2'b01;
+                        alu_out_sel = 2'b01;
+                        alu_in_sel <= 4'b0010;   //使用寄存器DR作为目的操作数
+                        alu_func <= 4'b1101;    //alu_func实现按位反转
+                    end
                     8'b01000000 : begin
                         dest_reg <= 4'b0000;
                         sour_reg <= 4'b0000;

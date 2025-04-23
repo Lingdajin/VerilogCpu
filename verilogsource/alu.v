@@ -16,6 +16,8 @@ module alu(
 
     always @(*) begin : P1
         
+        integer I1;
+
         reg [15:0] temp1, temp2, temp3;
         reg [31:0] res32;   //32位结果暂存，可用于循环移位
 
@@ -77,6 +79,11 @@ module alu(
                         temp2 = res32[15:0];   //截取缓存的低16位作为结果
                     end
                 endcase
+            end
+            4'b1101 : begin : RBIT  //按位反转
+                for(I1 = 0; I1 < 16; I1 = I1 + 1) begin
+                    temp2[I1] = alu_b[15-I1];
+                end
             end
             default : begin
                 temp2 = 16'b0000000000000000;
