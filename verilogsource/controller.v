@@ -265,7 +265,7 @@ module controller(
                         dest_reg <= temp3;
                         sour_reg <= temp4;
                         offset <= 8'b00000000;
-                        sci <= 2'b10;
+                        sci <= 2'b00;
                         sst <= 2'b00;
                         alu_out_sel = 2'b01;
                         alu_in_sel <= 4'b0000;
@@ -275,11 +275,22 @@ module controller(
                         dest_reg <= temp3;
                         sour_reg <= temp4;
                         offset <= 8'b00000000;
-                        sci <= 2'b10;
+                        sci <= 2'b00;
                         sst <= 2'b00;
                         alu_out_sel = 2'b01;
                         alu_in_sel <= 4'b0000;
                         alu_func <= 4'b1011;
+                    end
+                    //由于算数左移与逻辑左移一致，故不另行添加
+                    8'b0001_0011 : begin   //算数右移SHL
+                        dest_reg <= temp3;
+                        sour_reg <= temp4;
+                        offset <= 8'b00000000;
+                        sci <= 2'b00;
+                        sst <= 2'b00;
+                        alu_out_sel = 2'b01;
+                        alu_in_sel <= 4'b0000;
+                        alu_func <= 4'b1100;    //alu_func实现算数右移
                     end
                     8'b01000000 : begin
                         dest_reg <= 4'b0000;
@@ -431,6 +442,14 @@ module controller(
                         push <= 1'b0;
                         pop <= 1'b0;
                     end
+                    8'b1000_1000,8'b1000_1001 : begin    //SHL_ SHR_命令,使用立即数data进行移位
+                        sci <= 2'b01;   //c设置为1，可在alu中加1
+                        alu_out_sel = 2'b10;    //写pc允许
+                        alu_in_sel <= 4'b0100;   //使用pc作为操作数，在alu中进行加1操作，即pc+1以进行data读取
+                        rec <= 2'b01;
+                        push <= 1'b0;
+                        pop <= 1'b0;
+                    end
                     default : begin
                     end
                 endcase
@@ -500,6 +519,22 @@ module controller(
                         push <= 1'b0;
                         pop <= 1'b0;
                         alu_func <= 4'b1011;    //实现立即数循环右移
+                    end
+                    8'b1000_1000 : begin    //SHL_命令,使用立即数data进行移位
+                        alu_out_sel = 2'b01;    //允许写reg
+                        alu_in_sel <= 4'b1000;   //使用data作为源操作数，目的操作数不变
+                        wr <= 1'b1;     //t3高阻态
+                        push <= 1'b0;
+                        pop <= 1'b0;
+                        alu_func <= 4'b0101;    //实现立即数逻辑左移
+                    end
+                    8'b1000_1001 : begin    //SHR_命令,使用立即数data进行移位
+                        alu_out_sel = 2'b01;    //允许写reg
+                        alu_in_sel <= 4'b1000;   //使用data作为源操作数，目的操作数不变
+                        wr <= 1'b1;     //t3高阻态
+                        push <= 1'b0;
+                        pop <= 1'b0;
+                        alu_func <= 4'b0110;    //实现立即数逻辑右移
                     end
                 endcase
             end
