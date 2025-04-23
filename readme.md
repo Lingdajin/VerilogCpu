@@ -33,7 +33,7 @@
 
 ## 添加循环左移右移命令（使用寄存器作为移位次数）
 * 指令格式 ROL 0001_0001_DR_SR   ROR 0001_0010_DR_SR
-* 汇编语句 ROL DR SR             ROR DR SR
+* 汇编语句 ROL DR,SR             ROR DR,SR
 * 操作数个数 2
 * CZVS ....
 * 指令类型 A组指令
@@ -41,8 +41,16 @@
 
 ## 添加循环左移右移命令（使用立即数作为移位次数）
 * 指令格式 ROL_ 1000_0110_DR_0000_data   ROR_ 0001_0010_DR_0000_data
-* 汇编语句 ROL_ DR data                     ROR_ DR data
+* 汇编语句 ROL_ DR,data                     ROR_ DR,data
 * 操作数个数 2
 * CZVS ....
 * 指令类型 B组指令
 * 功能说明  ROL_ DR <- (DR << data)    ROR_ DR <- (DR >> data)
+
+## 修改逻辑左移右移命令，使其可以使用SR寄存器值作为移位次数
+* 指令格式 SHL 1000_0110_DR_0000_data   SHR 0001_0010_DR_0000_data
+* 汇编语句 SHL DR,SR                    SHR DR,SR
+* 操作数个数 2
+* CZVS *...
+* 指令类型 A组指令
+* 功能说明  SHL DR,C <- DR*(2^SR)    SHR DR,C <- DR/(2^SR)

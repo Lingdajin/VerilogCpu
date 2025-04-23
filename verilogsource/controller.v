@@ -191,25 +191,25 @@ module controller(
                         alu_in_sel <= 4'b0010;
                         alu_func <= 4'b0000;
                     end
-                    8'b00001010 : begin
+                    8'b00001010 : begin     //修改，逻辑左移，使用寄存器作为移位次数
                         dest_reg <= temp3;
                         sour_reg <= temp4;
                         offset <= 8'b00000000;
                         sci <= 2'b00;
-                        sst <= 2'b00;
-                        alu_out_sel = 2'b01;
-                        alu_in_sel <= 4'b0010;
-                        alu_func <= 4'b0101;
+                        sst <= 2'b00;   //更新czvs
+                        alu_out_sel = 2'b01;    //允许写reg
+                        alu_in_sel <= 4'b0000;  //使用寄存器作为源操作数和目的操作数
+                        alu_func <= 4'b0101;    //alu_func实现逻辑左移
                     end
-                    8'b00001011 : begin
+                    8'b00001011 : begin     //修改，逻辑右移，使用寄存器作为移位次数
                         dest_reg <= temp3;
                         sour_reg <= temp4;
                         offset <= 8'b00000000;
                         sci <= 2'b00;
                         sst <= 2'b00;
                         alu_out_sel = 2'b01;
-                        alu_in_sel <= 4'b0010;
-                        alu_func <= 4'b0110;
+                        alu_in_sel <= 4'b0000;
+                        alu_func <= 4'b0110;    //alu_func实现逻辑右移
                     end
                     8'b00001100 : begin
                         dest_reg <= temp3;
