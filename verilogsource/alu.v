@@ -85,6 +85,9 @@ module alu(
                     temp2[I1] = alu_b[15-I1];
                 end
             end
+            4'b1110 : begin     //按字节反转
+                temp2 = {alu_b[7:0],alu_b[15:8]};
+            end
             default : begin
                 temp2 = 16'b0000000000000000;
             end
