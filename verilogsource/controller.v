@@ -312,7 +312,7 @@ module controller(
                         alu_in_sel <= 4'b0010;   //使用寄存器DR作为目的操作数
                         alu_func <= 4'b1110;    //alu_func实现字节反转
                     end
-                    
+
                     8'b01000000 : begin
                         dest_reg <= 4'b0000;
                         sour_reg <= 4'b0000;
@@ -479,6 +479,22 @@ module controller(
                         push <= 1'b0;
                         pop <= 1'b0;
                     end
+                    8'b1000_1011 : begin    //ADD_命令,使用立即数data进行加法
+                        sci <= 2'b01;   //c设置为1，可在alu中加1
+                        alu_out_sel = 2'b10;    //写pc允许
+                        alu_in_sel <= 4'b0100;   //使用pc作为操作数，在alu中进行加1操作，即pc+1以进行data读取
+                        rec <= 2'b01;
+                        push <= 1'b0;
+                        pop <= 1'b0;
+                    end
+                    8'b1000_1100 : begin    //SUB_命令,使用立即数data进行减法
+                        sci <= 2'b01;   //c设置为1，可在alu中加1
+                        alu_out_sel = 2'b10;    //写pc允许
+                        alu_in_sel <= 4'b0100;   //使用pc作为操作数，在alu中进行加1操作，即pc+1以进行data读取
+                        rec <= 2'b01;
+                        push <= 1'b0;
+                        pop <= 1'b0;
+                    end
                     default : begin
                     end
                 endcase
@@ -487,7 +503,7 @@ module controller(
                 dest_reg <= temp3;
                 sour_reg <= temp4;
                 offset <= 8'b00000000;
-                sci <= 2'b00;   //c设为1
+                sci <= 2'b00;   //c设为0
                 sst <= 2'b11;   //flag不做任何事
                 rec <= 2'b00;   //ar ir不做任何事
                 case(temp1)
@@ -572,6 +588,22 @@ module controller(
                         push <= 1'b0;
                         pop <= 1'b0;
                         alu_func <= 4'b1100;    //实现立即数算数右移
+                    end
+                    8'b1000_1011 : begin    //ADD_命令,使用立即数data进行加法
+                        alu_out_sel = 2'b01;    //允许写reg
+                        alu_in_sel <= 4'b1000;   //使用data作为源操作数，目的操作数不变
+                        wr <= 1'b1;     //t3高阻态
+                        push <= 1'b0;
+                        pop <= 1'b0;
+                        alu_func <= 4'b0000;    //实现立即数加法
+                    end
+                    8'b1000_1100 : begin    //SUB_命令,使用立即数data进行减法
+                        alu_out_sel = 2'b01;    //允许写reg
+                        alu_in_sel <= 4'b1000;   //使用data作为源操作数，目的操作数不变
+                        wr <= 1'b1;     //t3高阻态
+                        push <= 1'b0;
+                        pop <= 1'b0;
+                        alu_func <= 4'b0001;    //实现立即数减法
                     end
                 endcase
             end
