@@ -410,16 +410,27 @@ module controller(
             3'b101 : begin
                 alu_func <= 4'b0000;
                 wr <= 1'b1;
-                sst <= 2'b11;
+                sst <= 2'b11;   //不更新CZVS
                 dest_reg <= temp3;
                 sour_reg <= temp4;
                 offset <= 8'b00000000;
                 case(temp1)
-                    8'b10000000,8'b10000001 : begin
-                        sci <= 2'b01;
-                        alu_out_sel = 2'b10;
-                        alu_in_sel <= 4'b0100;
-                        rec <= 2'b01;
+                    /*
+                    101时序中，使用立即数作为源操作数的数据设计一致，均为pc+1操作，故合并
+                    */
+                    8'b10000000,8'b10000001,
+                    8'b1000_0110,8'b1000_0111,  //ROL_ ROR_命令,使用立即数data进行移位
+                    8'b1000_1000,8'b1000_1001,  //SHL_ SHR_命令,使用立即数data进行移位
+                    8'b1000_1010,  //SAR_命令,使用立即数data进行移位
+                    8'b1000_1011,8'b1000_1100,  //ADD_ SUB_命令,使用目的操作数DR和立即数data进行加减
+                    8'b1000_1101,8'b1000_1110,  //AND_ CMP_命令,使用目的操作数DR和立即数data进行与操作、比较操作
+                    8'b1000_1111,8'b1001_0000,8'b1001_0001,  //XOR_ TEST_ OR_ 命令,使用目的操作数DR和立即数data进行异或操作、与测试操作、或操作
+                    8'b1001_0010,8'b1001_0011  //ADC_ SBB_命令,使用目的操作数DR和立即数data进行带进位加操作、带借位减操作
+                    : begin
+                        sci <= 2'b01;   //c设置为1，可在alu中加1
+                        alu_out_sel = 2'b10;    //写pc允许
+                        alu_in_sel <= 4'b0100;   //使用pc作为操作数，在alu中进行加1操作，即pc+1以进行data读取
+                        rec <= 2'b01;   //ar将pc值传入地址总线,预备读取data
                         push <= 1'b0;
                         pop <= 1'b0;
                     end
@@ -455,46 +466,6 @@ module controller(
                         push <= 1'b0;
                         pop <= 1'b0;  //先读取，再sp+1
                     end
-                    8'b1000_0110,8'b1000_0111 : begin    //ROL_ ROR_命令,使用立即数data进行移位
-                        sci <= 2'b01;   //c设置为1，可在alu中加1
-                        alu_out_sel = 2'b10;    //写pc允许
-                        alu_in_sel <= 4'b0100;   //使用pc作为操作数，在alu中进行加1操作，即pc+1以进行data读取
-                        rec <= 2'b01;
-                        push <= 1'b0;
-                        pop <= 1'b0;
-                    end
-                    8'b1000_1000,8'b1000_1001 : begin    //SHL_ SHR_命令,使用立即数data进行移位
-                        sci <= 2'b01;   //c设置为1，可在alu中加1
-                        alu_out_sel = 2'b10;    //写pc允许
-                        alu_in_sel <= 4'b0100;   //使用pc作为操作数，在alu中进行加1操作，即pc+1以进行data读取
-                        rec <= 2'b01;
-                        push <= 1'b0;
-                        pop <= 1'b0;
-                    end
-                    8'b1000_1010 : begin    //SAR_命令,使用立即数data进行移位
-                        sci <= 2'b01;   //c设置为1，可在alu中加1
-                        alu_out_sel = 2'b10;    //写pc允许
-                        alu_in_sel <= 4'b0100;   //使用pc作为操作数，在alu中进行加1操作，即pc+1以进行data读取
-                        rec <= 2'b01;
-                        push <= 1'b0;
-                        pop <= 1'b0;
-                    end
-                    8'b1000_1011 : begin    //ADD_命令,使用立即数data进行加法
-                        sci <= 2'b01;   //c设置为1，可在alu中加1
-                        alu_out_sel = 2'b10;    //写pc允许
-                        alu_in_sel <= 4'b0100;   //使用pc作为操作数，在alu中进行加1操作，即pc+1以进行data读取
-                        rec <= 2'b01;
-                        push <= 1'b0;
-                        pop <= 1'b0;
-                    end
-                    8'b1000_1100 : begin    //SUB_命令,使用立即数data进行减法
-                        sci <= 2'b01;   //c设置为1，可在alu中加1
-                        alu_out_sel = 2'b10;    //写pc允许
-                        alu_in_sel <= 4'b0100;   //使用pc作为操作数，在alu中进行加1操作，即pc+1以进行data读取
-                        rec <= 2'b01;
-                        push <= 1'b0;
-                        pop <= 1'b0;
-                    end
                     default : begin
                     end
                 endcase
@@ -503,13 +474,13 @@ module controller(
                 dest_reg <= temp3;
                 sour_reg <= temp4;
                 offset <= 8'b00000000;
-                sci <= 2'b00;   //c设为0
-                sst <= 2'b11;   //flag不做任何事
                 rec <= 2'b00;   //ar ir不做任何事
                 case(temp1)
                     8'b10000010,8'b10000001 : begin
                         alu_out_sel = 2'b01;
                         alu_in_sel <= 4'b0101;
+                        sci <= 2'b00;   //c设为0
+                        sst <= 2'b11;   //flag不更新CZVS
                         wr <= 1'b1;
                         push <= 1'b0;
                         pop <= 1'b0;
@@ -518,6 +489,8 @@ module controller(
                     8'b10000000 : begin
                         alu_out_sel = 2'b10;
                         alu_in_sel <= 4'b0101;
+                        sci <= 2'b00;   //c设为0
+                        sst <= 2'b11;   //flag不更新CZVS
                         wr <= 1'b1;
                         push <= 1'b0;
                         pop <= 1'b0;
@@ -526,6 +499,8 @@ module controller(
                     8'b10000011 : begin
                         alu_out_sel = 2'b00;
                         alu_in_sel <= 4'b0001;
+                        sci <= 2'b00;   //c设为0
+                        sst <= 2'b11;   //flag不更新CZVS
                         wr <= 1'b0;
                         push <= 1'b0;
                         pop <= 1'b0;
@@ -534,6 +509,8 @@ module controller(
                     8'b1000_0100 : begin    //PUSH命令
                         alu_out_sel = 2'b00;
                         alu_in_sel <= 4'b0001;   //读取堆栈指针
+                        sci <= 2'b00;   //c设为0
+                        sst <= 2'b11;   //flag不更新CZVS
                         wr <= 1'b0;
                         push <= 1'b0;
                         pop <= 1'b0;
@@ -542,6 +519,8 @@ module controller(
                     8'b1000_0101 : begin    //POP命令
                         alu_out_sel = 2'b01;
                         alu_in_sel <= 4'b0101;
+                        sci <= 2'b00;   //c设为0
+                        sst <= 2'b11;   //flag不更新CZVS
                         wr <= 1'b1;
                         push <= 1'b0;
                         pop <= 1'b1;   //sp已在上一time加一，不再进行操作
@@ -552,6 +531,8 @@ module controller(
                     8'b1000_0110 : begin    //ROL_命令,使用立即数data进行移位
                         alu_out_sel = 2'b01;    //允许写reg
                         alu_in_sel <= 4'b1000;   //使用data作为源操作数，目的操作数不变
+                        sci <= 2'b00;   //c设为0
+                        sst <= 2'b00;   //flag更新
                         wr <= 1'b1;     //t3高阻态
                         push <= 1'b0;
                         pop <= 1'b0;
@@ -560,6 +541,8 @@ module controller(
                     8'b1000_0111 : begin    //ROR_命令,使用立即数data进行移位
                         alu_out_sel = 2'b01;    //允许写reg
                         alu_in_sel <= 4'b1000;   //使用data作为源操作数，目的操作数不变
+                        sci <= 2'b00;   //c设为0
+                        sst <= 2'b00;   //flag更新CZVS
                         wr <= 1'b1;     //t3高阻态
                         push <= 1'b0;
                         pop <= 1'b0;
@@ -568,6 +551,8 @@ module controller(
                     8'b1000_1000 : begin    //SHL_命令,使用立即数data进行移位
                         alu_out_sel = 2'b01;    //允许写reg
                         alu_in_sel <= 4'b1000;   //使用data作为源操作数，目的操作数不变
+                        sci <= 2'b00;   //c设为0
+                        sst <= 2'b00;   //flag更新CZVS
                         wr <= 1'b1;     //t3高阻态
                         push <= 1'b0;
                         pop <= 1'b0;
@@ -576,6 +561,8 @@ module controller(
                     8'b1000_1001 : begin    //SHR_命令,使用立即数data进行移位
                         alu_out_sel = 2'b01;    //允许写reg
                         alu_in_sel <= 4'b1000;   //使用data作为源操作数，目的操作数不变
+                        sci <= 2'b00;   //c设为0
+                        sst <= 2'b00;   //flag更新CZVS
                         wr <= 1'b1;     //t3高阻态
                         push <= 1'b0;
                         pop <= 1'b0;
@@ -584,6 +571,8 @@ module controller(
                     8'b1000_1010 : begin    //SAR_命令,使用立即数data进行移位
                         alu_out_sel = 2'b01;    //允许写reg
                         alu_in_sel <= 4'b1000;   //使用data作为源操作数，目的操作数不变
+                        sci <= 2'b00;   //c设为0
+                        sst <= 2'b00;   //flag更新CZVS
                         wr <= 1'b1;     //t3高阻态
                         push <= 1'b0;
                         pop <= 1'b0;
@@ -592,6 +581,8 @@ module controller(
                     8'b1000_1011 : begin    //ADD_命令,使用立即数data进行加法
                         alu_out_sel = 2'b01;    //允许写reg
                         alu_in_sel <= 4'b1000;   //使用data作为源操作数，目的操作数不变
+                        sci <= 2'b00;   //c设为0
+                        sst <= 2'b00;   //flag更新CZVS
                         wr <= 1'b1;     //t3高阻态
                         push <= 1'b0;
                         pop <= 1'b0;
@@ -600,10 +591,82 @@ module controller(
                     8'b1000_1100 : begin    //SUB_命令,使用立即数data进行减法
                         alu_out_sel = 2'b01;    //允许写reg
                         alu_in_sel <= 4'b1000;   //使用data作为源操作数，目的操作数不变
+                        sci <= 2'b00;   //c设为0
+                        sst <= 2'b00;   //flag更新CZVS
                         wr <= 1'b1;     //t3高阻态
                         push <= 1'b0;
                         pop <= 1'b0;
                         alu_func <= 4'b0001;    //实现立即数减法
+                    end
+                    8'b1000_1101 : begin    //AND_命令,使用立即数data进行与操作
+                        alu_out_sel = 2'b01;    //允许写reg
+                        alu_in_sel <= 4'b1000;   //使用data作为源操作数，目的操作数不变
+                        sci <= 2'b00;   //c设为0
+                        sst <= 2'b00;   //flag更新CZVS
+                        wr <= 1'b1;     //t3高阻态
+                        push <= 1'b0;
+                        pop <= 1'b0;
+                        alu_func <= 4'b0010;    //实现立即数与操作
+                    end
+                    8'b1000_1110 : begin    //CMP_命令,使用立即数data进行比较
+                        alu_out_sel = 2'b01;    //允许写reg
+                        alu_in_sel <= 4'b1000;   //使用data作为源操作数，目的操作数不变
+                        sci <= 2'b00;   //c设为0
+                        sst <= 2'b00;   //flag更新CZVS
+                        wr <= 1'b1;     //t3高阻态
+                        push <= 1'b0;
+                        pop <= 1'b0;
+                        alu_func <= 4'b0001;    //实现立即数比较操作
+                    end
+                    8'b1000_1111 : begin    //XOR_命令,使用立即数data进行异或操作
+                        alu_out_sel = 2'b01;    //允许写reg
+                        alu_in_sel <= 4'b1000;   //使用data作为源操作数，目的操作数不变
+                        sci <= 2'b00;   //c设为0
+                        sst <= 2'b00;   //flag更新CZVS
+                        wr <= 1'b1;     //t3高阻态
+                        push <= 1'b0;
+                        pop <= 1'b0;
+                        alu_func <= 4'b0100;    //实现立即数异或操作
+                    end
+                    8'b1001_0000 : begin    //TEST_命令,使用立即数data进行与测试操作
+                        alu_out_sel = 2'b01;    //允许写reg
+                        alu_in_sel <= 4'b1000;   //使用data作为源操作数，目的操作数不变
+                        sci <= 2'b00;   //c设为0
+                        sst <= 2'b00;   //flag更新CZVS
+                        wr <= 1'b1;     //t3高阻态
+                        push <= 1'b0;
+                        pop <= 1'b0;
+                        alu_func <= 4'b0010;    //实现立即数与测试操作
+                    end
+                    8'b1001_0001 : begin    //OR_命令,使用立即数data进行或操作
+                        alu_out_sel = 2'b01;    //允许写reg
+                        alu_in_sel <= 4'b1000;   //使用data作为源操作数，目的操作数不变
+                        sci <= 2'b00;   //c设为0
+                        sst <= 2'b00;   //flag更新CZVS
+                        wr <= 1'b1;     //t3高阻态
+                        push <= 1'b0;
+                        pop <= 1'b0;
+                        alu_func <= 4'b0011;    //实现立即数或操作
+                    end
+                    8'b1001_0010 : begin    //ADC_命令,使用立即数data进行带进位加法
+                        alu_out_sel = 2'b01;    //允许写reg
+                        alu_in_sel <= 4'b1000;   //使用data作为源操作数，目的操作数不变
+                        sci <= 2'b10;   //c设为flag_c
+                        sst <= 2'b00;   //flag更新CZVS
+                        wr <= 1'b1;     //t3高阻态
+                        push <= 1'b0;
+                        pop <= 1'b0;
+                        alu_func <= 4'b0000;    //实现立即数带进位加法
+                    end
+                    8'b1001_0011 : begin    //SBB_命令,使用立即数data进行带借位减法
+                        alu_out_sel = 2'b01;    //允许写reg
+                        alu_in_sel <= 4'b1000;   //使用data作为源操作数，目的操作数不变
+                        sci <= 2'b10;   //c设为flag_c
+                        sst <= 2'b00;   //flag更新CZVS
+                        wr <= 1'b1;     //t3高阻态
+                        push <= 1'b0;
+                        pop <= 1'b0;
+                        alu_func <= 4'b0001;    //实现立即数带进位减法
                     end
                 endcase
             end

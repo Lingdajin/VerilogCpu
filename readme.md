@@ -102,3 +102,27 @@
 * CZVS ****
 * 指令类型 B组指令
 * 功能说明  ADD_ DR <- DR + data            SUB_ DR <- DR - data
+
+## 添加与操作和比较操作的立即数版本
+* 指令格式  AND_ 1000_1101_DR_0000_data     CMP_ 1000_1110_DR_0000_data   
+* 汇编语句  AND_ DR,data                    CMP_ DR,data
+* 操作数个数 2
+* CZVS ****
+* 指令类型 B组指令
+* 功能说明  AND_ DR <- DR & data            CMP_ DR - data
+
+## 添加异或操作、测试操作和或操作的立即数版本
+* 指令格式  XOR_ 1000_1111_DR_0000_data     TEST_ 1001_0000_DR_0000_data       OR_ 1001_0001_DR_0000_data
+* 汇编语句  XOR_ DR,data                    TEST_ DR,data                      OR_ DR,data
+* 操作数个数 2
+* CZVS ****
+* 指令类型 B组指令
+* 功能说明  XOR_ DR <- DR ^ data            TEST_ DR & data                    OR_ DR <- DR | data
+
+## 添加带进位加操作和带借位减操作的立即数版本
+* 指令格式  ADC_ 1001_0010_DR_0000_data     SBB_ 1001_0011_DR_0000_data   
+* 汇编语句  ADC_ DR,data                    SBB_ DR,data
+* 操作数个数 2
+* CZVS ****
+* 指令类型 B组指令
+* 功能说明  ADC_ DR <- DR + data + C        SBB_ DR <- DR - data - C

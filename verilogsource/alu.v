@@ -105,9 +105,17 @@ module alu(
         else begin
             s <= 1'b0;
         end
-        case(alu_func)
-            4'b0000,4'b0001 : begin
+        case(alu_func)  //原溢出判断有问题，加法减法需分开判断
+            4'b0000 : begin
                 if((alu_a[15] == 1'b1 && alu_b[15] == 1'b1 && temp2[15] == 1'b0) || (alu_a[15] == 1'b0 && alu_b[15] == 1'b0 && temp2[15] == 1'b1)) begin
+                    v <= 1'b1;
+                end
+                else begin
+                    v <= 1'b0;
+                end
+            end
+            4'b0001 : begin
+                if((alu_a[15] == 1'b1 && alu_b[15] == 1'b0 && temp2[15] == 1'b1) || (alu_a[15] == 1'b0 && alu_b[15] == 1'b1 && temp2[15] == 1'b0)) begin
                     v <= 1'b1;
                 end
                 else begin
@@ -148,6 +156,9 @@ module alu(
                 c <= alu_b[15];
             end
             4'b0110 : begin
+                c <= alu_b[0];
+            end
+            4'b1100 : begin     //算术右移c值
                 c <= alu_b[0];
             end
             default : begin
