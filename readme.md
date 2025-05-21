@@ -126,3 +126,11 @@
 * CZVS ****
 * 指令类型 B组指令
 * 功能说明  ADC_ DR <- DR + data + C        SBB_ DR <- DR - data - C
+
+## 添加两个立即数相加并赋给目的寄存器指令
+* 指令格式 1100_0000_DR_0000_data1_data2
+* 汇编语句 ADD_DD DR,data1,data2
+* 操作数个数 3
+* CZVS ****
+* 指令类型 C组指令
+* 功能说明  将DR <- data1 + data2

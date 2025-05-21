@@ -1,6 +1,6 @@
 
 module controller(
-        input wire [2:0] timer,
+        input wire [3:0] timer,
         input wire [15:0] instruction,
         input wire c,
         input wire z,
@@ -43,7 +43,7 @@ module controller(
             temp4[I2] = instruction[I2];
         end
         case(timer)
-            3'b100 : begin
+            4'b0100 : begin
                 dest_reg <= 4'b0000;
                 sour_reg <= 4'b0000;
                 offset <= 8'b00000000;
@@ -57,38 +57,38 @@ module controller(
                 push <= 1'b0;
                 pop <= 1'b0;
             end
-            3'b000 : begin
+            4'b0000 : begin
                 dest_reg <= 4'b0000;
                 sour_reg <= 4'b0000;
                 offset <= 8'b00000000;
-                sci <= 2'b01;
-                sst <= 2'b11;
-                alu_out_sel = 2'b10;
-                alu_in_sel <= 4'b0100;
-                alu_func <= 4'b00000;
-                wr <= 1'b1;
-                rec <= 2'b01;
-                push <= 1'b0;
+                sci <= 2'b01;           //alu_func中的c设置为1
+                sst <= 2'b11;           //不更新CZVS
+                alu_out_sel = 2'b10;    //写pc允许
+                alu_in_sel <= 4'b0100;  //对pc值进行操作
+                alu_func <= 4'b00000;   //pc值加一（B组指令的data实际是这里的pc值所代表）
+                wr <= 1'b1;             //禁止alu_out进入数据总线
+                rec <= 2'b01;           //ar读取pc值，并将pc值传入地址总线,预备读取instruction指令（需注意pc值先进入总线，再自增一）
+                push <= 1'b0;           //sp不操作
                 pop <= 1'b0;
             end
-            3'b001 : begin
+            4'b0001 : begin
                 dest_reg <= 4'b0000;
                 sour_reg <= 4'b0000;
                 offset <= 8'b00000000;
-                sci <= 2'b00;
-                sst <= 2'b11;
-                alu_out_sel = 2'b00;
-                alu_in_sel <= 4'b0000;
-                alu_func <= 4'b00000;
-                wr <= 1'b1;
-                rec <= 2'b10;
+                sci <= 2'b00;           //alu_func中的c设置为0
+                sst <= 2'b11;           //不更新CZVS
+                alu_out_sel = 2'b00;    //禁止写pc,禁止写reg
+                alu_in_sel <= 4'b0000;  //运算使用目的寄存器和源寄存器，此处并不进行运算，无用
+                alu_func <= 4'b00000;   //alu_func为0000，且c为0，表示alu对输入数进行相加，不过此处不对结果进行处理，无用
+                wr <= 1'b1;             //禁止alu_out进入数据总线
+                rec <= 2'b10;           //ir读取数据总线，此处读取instruction指令，ir再将其传入controller
                 push <= 1'b0;
                 pop <= 1'b0;
             end
-            3'b011 : begin
-                wr <= 1'b1;
-                rec <= 2'b00;
-                push <= 1'b0;
+            4'b0011 : begin
+                wr <= 1'b1;             //禁止alu_out进入数据总线
+                rec <= 2'b00;           //不操作
+                push <= 1'b0;           //sp不操作
                 pop <= 1'b0;
                 case(temp1)
                     8'b00000000 : begin
@@ -407,10 +407,10 @@ module controller(
                     end
                 endcase
             end
-            3'b101 : begin
+            4'b0101 : begin
                 alu_func <= 4'b0000;
-                wr <= 1'b1;
-                sst <= 2'b11;   //不更新CZVS
+                wr <= 1'b1;             //禁止alu_out进入数据总线
+                sst <= 2'b11;           //不更新CZVS
                 dest_reg <= temp3;
                 sour_reg <= temp4;
                 offset <= 8'b00000000;
@@ -425,12 +425,13 @@ module controller(
                     8'b1000_1011,8'b1000_1100,  //ADD_ SUB_命令,使用目的操作数DR和立即数data进行加减
                     8'b1000_1101,8'b1000_1110,  //AND_ CMP_命令,使用目的操作数DR和立即数data进行与操作、比较操作
                     8'b1000_1111,8'b1001_0000,8'b1001_0001,  //XOR_ TEST_ OR_ 命令,使用目的操作数DR和立即数data进行异或操作、与测试操作、或操作
-                    8'b1001_0010,8'b1001_0011  //ADC_ SBB_命令,使用目的操作数DR和立即数data进行带进位加操作、带借位减操作
+                    8'b1001_0010,8'b1001_0011,  //ADC_ SBB_命令,使用目的操作数DR和立即数data进行带进位加操作、带借位减操作
+                    8'b1100_0000                //C组指令ADD_DD指令，将两个立即数相加，并赋值给目的寄存器
                     : begin
                         sci <= 2'b01;   //c设置为1，可在alu中加1
                         alu_out_sel = 2'b10;    //写pc允许
                         alu_in_sel <= 4'b0100;   //使用pc作为操作数，在alu中进行加1操作，即pc+1以进行data读取
-                        rec <= 2'b01;   //ar将pc值传入地址总线,预备读取data
+                        rec <= 2'b01;   //ar读取pc值，将pc值传入地址总线,预备读取data
                         push <= 1'b0;
                         pop <= 1'b0;
                     end
@@ -438,7 +439,7 @@ module controller(
                         sci <= 2'b00;
                         alu_out_sel = 2'b00;
                         alu_in_sel <= 4'b0001;
-                        rec <= 2'b11;
+                        rec <= 2'b11;           //ar将sr的值送入地址总线，预备读取sr值对应地址的内存里的值
                         push <= 1'b0;
                         pop <= 1'b0;
                     end
@@ -470,21 +471,21 @@ module controller(
                     end
                 endcase
             end
-            3'b111 : begin
+            4'b0111 : begin
                 dest_reg <= temp3;
                 sour_reg <= temp4;
                 offset <= 8'b00000000;
-                rec <= 2'b00;   //ar ir不做任何事
+                rec <= 2'b00;           //ar ir不做任何事
                 case(temp1)
                     8'b10000010,8'b10000001 : begin
-                        alu_out_sel = 2'b01;
-                        alu_in_sel <= 4'b0101;
-                        sci <= 2'b00;   //c设为0
-                        sst <= 2'b11;   //flag不更新CZVS
-                        wr <= 1'b1;
+                        alu_out_sel = 2'b01;    //写reg允许
+                        alu_in_sel <= 4'b0101;  //目的操作数设置为data
+                        sci <= 2'b00;           //c设为0
+                        sst <= 2'b11;           //flag不更新CZVS
+                        wr <= 1'b1;             //禁止alu_out进入数据总线
                         push <= 1'b0;
                         pop <= 1'b0;
-                        alu_func <= 4'b0000;    //alu_func为0000，且c为0，表示alu对输入数不进行任何操作
+                        alu_func <= 4'b0000;    //alu_func为0000，且c为0，此处alu无用
                     end
                     8'b10000000 : begin
                         alu_out_sel = 2'b10;
@@ -609,7 +610,7 @@ module controller(
                         alu_func <= 4'b0010;    //实现立即数与操作
                     end
                     8'b1000_1110 : begin    //CMP_命令,使用立即数data进行比较
-                        alu_out_sel = 2'b01;    //允许写reg
+                        alu_out_sel = 2'b00;    //禁止写reg
                         alu_in_sel <= 4'b1000;   //使用data作为源操作数，目的操作数不变
                         sci <= 2'b00;   //c设为0
                         sst <= 2'b00;   //flag更新CZVS
@@ -629,7 +630,7 @@ module controller(
                         alu_func <= 4'b0100;    //实现立即数异或操作
                     end
                     8'b1001_0000 : begin    //TEST_命令,使用立即数data进行与测试操作
-                        alu_out_sel = 2'b01;    //允许写reg
+                        alu_out_sel = 2'b00;    //允许写reg
                         alu_in_sel <= 4'b1000;   //使用data作为源操作数，目的操作数不变
                         sci <= 2'b00;   //c设为0
                         sst <= 2'b00;   //flag更新CZVS
@@ -668,6 +669,35 @@ module controller(
                         pop <= 1'b0;
                         alu_func <= 4'b0001;    //实现立即数带进位减法
                     end
+                    8'b1100_0000 : begin        //C组指令ADD_DD指令，将两个立即数相加，并赋值给目的寄存器
+                        alu_out_sel = 2'b01;    //允许写reg
+                        alu_in_sel <= 4'b1010;  //目的操作数不变（C组指令与0101配合,为了保留1101时序的data1值），源操作数使用总线传来的data2
+                        sci <= 2'b00;   //c设为0
+                        sst <= 2'b00;   //flag更新CZVS
+                        wr <= 1'b1;     //t3高阻态
+                        push <= 1'b0;
+                        pop <= 1'b0;
+                        alu_func <= 4'b0000;    //实现立即数加法
+                    end
+                endcase
+            end
+            4'b1101 : begin
+                dest_reg <= temp3;
+                sour_reg <= temp4;
+                offset <= 8'b00000000;
+                rec <= 2'b00;           //ar ir不做任何事
+                push <= 1'b0;
+                pop <= 1'b0;
+                case(temp1)
+                    8'b1100_0000 : begin        //ADD_DD指令，将两个立即数相加，并赋值给目的寄存器
+                        sci <= 2'b00;           //c设置为0
+                        sst <= 2'b11;           //不更新CZVS
+                        alu_out_sel = 2'b00;    //禁止写pc,禁止写reg
+                        alu_in_sel <= 4'b1001;  ////源操作数、目的操作数清零，目的操作数缓存使用总线传来的data1
+                        alu_func <= 4'b00000;   //alu_func为0000，且c为0，表示alu对输入数进行相加，不过此处不对结果进行处理，无用
+                        wr <= 1'b1;             //禁止alu_out进入数据总线
+                    end
+
                 endcase
             end
             default : begin
