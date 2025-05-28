@@ -53,9 +53,6 @@ module alu(
                     temp2[I2] = alu_b[I2 + 1];
                 end
             end
-            3'b111 : begin : P4     //dest_reg取反
-                temp2 = ~alu_b;
-            end
             default : begin
                 temp2 = 16'b0000000000000000;
             end

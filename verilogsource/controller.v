@@ -221,16 +221,6 @@ module controller(
                         alu_in_sel <= 3'b000;
                         alu_func <= 3'b001;
                     end
-                    8'b00001110 : begin     //取反NOT
-                        dest_reg <= temp3;
-                        sour_reg <= temp4;
-                        offset <= 8'b00000000;
-                        sci <= 2'b10;
-                        sst <= 2'b00;
-                        alu_out_sel = 2'b01;
-                        alu_in_sel <= 3'b000;
-                        alu_func <= 3'b111;     //添加运算指令取反
-                    end
                     8'b01000000 : begin
                         dest_reg <= 4'b0000;
                         sour_reg <= 4'b0000;
