@@ -57,29 +57,29 @@ module controller(
                 dest_reg <= 4'b0000;
                 sour_reg <= 4'b0000;
                 offset <= 8'b00000000;
-                sci <= 2'b01;
-                sst <= 2'b11;
-                alu_out_sel = 2'b10;
-                alu_in_sel <= 3'b100;
-                alu_func <= 3'b000;
-                wr <= 1'b1;
-                rec <= 2'b01;
+                sci <= 2'b01;           //alu_func中的c设置为1
+                sst <= 2'b11;           //不更新CZVS
+                alu_out_sel = 2'b10;    //写pc允许
+                alu_in_sel <= 3'b100;   //对pc值进行操作
+                alu_func <= 3'b000;     //pc值加一（B组指令的data实际是这里的pc值所代表）
+                wr <= 1'b1;             //禁止alu_out进入数据总线
+                rec <= 2'b01;           //ar读取pc值，并将pc值传入地址总线,预备读取instruction指令（需注意pc值先进入总线，再自增一）
             end
             3'b001 : begin
                 dest_reg <= 4'b0000;
                 sour_reg <= 4'b0000;
                 offset <= 8'b00000000;
-                sci <= 2'b00;
-                sst <= 2'b11;
-                alu_out_sel = 2'b00;
-                alu_in_sel <= 3'b000;
-                alu_func <= 3'b000;
-                wr <= 1'b1;
-                rec <= 2'b10;
+                sci <= 2'b00;           //alu_func中的c设置为0
+                sst <= 2'b11;           //不更新CZVS
+                alu_out_sel = 2'b00;    //禁止写pc,禁止写reg
+                alu_in_sel <= 3'b000;   //运算使用目的寄存器和源寄存器，此处并不进行运算，无用
+                alu_func <= 3'b000;     //alu_func为0000，且c为0，表示alu对输入数进行相加，不过此处不对结果进行处理，无用
+                wr <= 1'b1;             //禁止alu_out进入数据总线
+                rec <= 2'b10;           //ir读取数据总线，此处读取instruction指令，ir再将其传入controller
             end
             3'b011 : begin
-                wr <= 1'b1;
-                rec <= 2'b00;
+                wr <= 1'b1;             //禁止alu_out进入数据总线
+                rec <= 2'b00;           //不操作
                 case(temp1)
                     8'b00000000 : begin
                         dest_reg <= temp3;
@@ -317,23 +317,26 @@ module controller(
             end
             3'b101 : begin
                 alu_func <= 3'b000;
-                wr <= 1'b1;
-                sst <= 2'b11;
+                wr <= 1'b1;             //禁止alu_out进入数据总线
+                sst <= 2'b11;           //不更新CZVS
                 dest_reg <= temp3;
                 sour_reg <= temp4;
                 offset <= 8'b00000000;
                 case(temp1)
+                    /*
+                    101时序中，使用立即数作为源操作数的数据设计一致，均为pc+1操作，故合并
+                    */
                     8'b10000000,8'b10000001 : begin
-                        sci <= 2'b01;
-                        alu_out_sel = 2'b10;
-                        alu_in_sel <= 3'b100;
-                        rec <= 2'b01;
+                        sci <= 2'b01;           //c设置为1，可在alu中加1
+                        alu_out_sel = 2'b10;    //写pc允许
+                        alu_in_sel <= 3'b100;   //使用pc作为操作数，在alu中进行加1操作，即pc+1以进行data读取
+                        rec <= 2'b01;           //ar读取pc值，将pc值传入地址总线,预备读取data
                     end
                     8'b10000010 : begin
                         sci <= 2'b00;
                         alu_out_sel = 2'b00;
                         alu_in_sel <= 3'b001;
-                        rec <= 2'b11;
+                        rec <= 2'b11;           //ar将sr的值送入地址总线，预备读取sr值对应地址的内存里的值
                     end
                     8'b10000011 : begin
                         sci <= 2'b00;
@@ -349,15 +352,15 @@ module controller(
                 dest_reg <= temp3;
                 sour_reg <= temp4;
                 offset <= 8'b00000000;
-                sci <= 2'b00;
-                sst <= 2'b11;
-                alu_func <= 3'b000;
-                rec <= 2'b00;
+                sci <= 2'b00;               //c设为0
+                sst <= 2'b11;               //flag不更新CZVS
+                alu_func <= 3'b000;         //alu_func为0000，且c为0，此处alu无用
+                rec <= 2'b00;               //ar ir不做任何事
                 case(temp1)
                     8'b10000010,8'b10000001 : begin
-                        alu_out_sel = 2'b01;
-                        alu_in_sel <= 3'b101;
-                        wr <= 1'b1;
+                        alu_out_sel = 2'b01;        //写reg允许
+                        alu_in_sel <= 3'b101;       //目的操作数设置为data
+                        wr <= 1'b1;                 //禁止alu_out进入数据总线
                     end
                     8'b10000000 : begin
                         alu_out_sel = 2'b10;

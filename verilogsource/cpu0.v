@@ -1,6 +1,13 @@
-//CPU0.vhd- CPUģ��
-//2008-03-by yuyanli
-//use work.unitPack.all;
+/*
+        * CPU0 - A simple 16-bit CPU design
+        * 
+        * This module serves as the top-level design for a simple CPU with 16 registers,
+        * a 16-bit data bus, and a 16-bit address bus. It integrates various components
+        * such as the controller, ALU, flag register, timer, instruction register, and
+        * multiple registers.
+        *
+        * author: Ling_da_jin
+*/
 
 module cpu0(
         input wire reset,
@@ -17,20 +24,11 @@ module cpu0(
         output wire [15:0] reg_data
     );
 
-    //��λ
-    //ʱ��
-    //�ڴ��дʹ��
-    //flag c
-    //flag z
-    //flag v
-    //flag s
-    //ѡ��
-    //ѡ��Ĵ���
-    //�ڴ�������
-    //�ڴ��ַ��
-    //�Ĵ���ֵ���
+ 
 
-
+        /*
+        此处定义了各模块间的连线
+        */
 
     wire fc; wire fz; wire fv; wire fs; wire flag_c; wire flag_z; wire flag_v; wire flag_s; wire en_pc; wire en_reg; wire alu_cin; wire en_0; wire en_1; wire en_2; wire en_3; wire en_4; wire en_5; wire en_6; wire en_7; wire en_8; wire en_9; wire en_a; wire en_b; wire en_c; wire en_d; wire en_e; wire en_f; wire wre;
     wire [1:0] sst; wire [1:0] sci; wire [1:0] rec;
